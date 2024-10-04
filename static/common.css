@@ -1,0 +1,52 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: margin-left 0.3s;
+    background-image: url("/static/dark_bgd.jpg");
+    background-size: cover;
+}
+
+.menu-active {
+    margin-left: 250px;
+}
+
+#menu-toggle {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 1000;
+    color: white;
+}
+
+#slide-menu {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #333;
+    transition: left 0.3s;
+}
+
+.menu-active #slide-menu {
+    left: 0;
+}
+
+#slide-menu ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#slide-menu ul li a {
+    display: block;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+}
+
+#content {
+    padding: 20px;
+}

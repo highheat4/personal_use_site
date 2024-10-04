@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Task Productivity App</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    </head>
+<body>
+    <div id="menu-toggle">&#9776;</div>
+    <nav id="slide-menu">
+        <ul>
+            <li><a href="/">Habit Tracker</a></li>
+            <li><a href="/yearly-grid">Yearly Grid</a></li>
+            <input type="text" id="new-habit" placeholder="New habit">
+            <button onclick="addHabit()">Add Habit</button>
+        </ul>
+    </nav>
+    
+    <div id="content">
+        <div id="habit-tracker" class="page">
+            <div class="habit-tracker">
+                <h2>Habit Tracker</h2>
+                <div class="habits-container" id="habits"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="column" id="to-do-week">
+            <div class="column-header">
+                <span class="column-title">To Do This Week</span>
+                <span>...</span>
+            </div>
+        </div>
+        <div class="column" id="to-do-today">
+            <div class="column-header">
+                <span class="column-title">To Do Today</span>
+                <span>...</span>
+            </div>
+        </div>
+        <div class="column" id="in-progress">
+            <div class="column-header">
+                <span class="column-title">In Progress</span>
+                <span>...</span>
+            </div>
+        </div>
+        <div class="column" id="finished">
+            <div class="column-header">
+                <span class="column-title">Finished</span>
+                <span>...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
