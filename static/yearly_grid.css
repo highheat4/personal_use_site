@@ -1,0 +1,130 @@
+/* static/yearly_grid.css */
+
+/* Set the background color of the body or container to your dark background color */
+body {
+    background-color: #222;  /* Example dark background */
+    color: #fff;  /* Default text color to white */
+}
+
+#content {
+    color: #fff;
+}
+
+#heatmap-container {
+    position: relative;
+    padding: 20px 40px;
+    margin-top: 150px;
+}
+
+#year-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#year-navigation button {
+    background-color: #444;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#year-navigation button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#year-navigation span {
+    margin: 0 10px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-direction: row;
+    margin-left: 40px; /* Space for weekday labels */
+}
+
+.week-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.day-cell {
+    width: 25px;
+    height: 25px;
+    margin: 4px;
+    cursor: pointer;
+    background-color: #444;
+    cursor: pointer;
+}
+
+.day-cell.not-clickable {
+    cursor: default;
+}
+
+.months-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: -23px; /* Adjust based on the width of your weekday labels */
+}
+
+/* Optional: Set flex properties for .month-label if needed */
+.month-label {
+    font-size: 12px;
+    color: #fff;
+    text-align: center;
+    box-sizing: border-box;
+    /* Remove any properties that might force stacking */
+}
+
+.weekdays-column {
+    position: absolute;
+    top: 25px;
+    left: 0;
+}
+
+.weekday-label {
+    height: 17px;
+    margin: 2px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: #333;  /* Dark modal background */
+    color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 4px;
+    max-width: 500px;
+}
+
+.close-button {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.close-button:hover {
+    color: red;
+}

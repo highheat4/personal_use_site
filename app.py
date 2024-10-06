@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import date
+from datetime import date, datetime, timedelta
 import os
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -280,25 +280,66 @@ def update_journal(entry_id):
 
 @app.route('/api/history', methods=['GET'])
 def get_yearly_data():
+    year_param = request.args.get('year', default=date.today().year, type=int)
+    
+    # Define the start and end dates for the specified year
+    start_date = date(year_param, 1, 1)
+    end_date = date(year_param, 12, 31)
+    
+    # Handle future years gracefully
+    today = date.today()
+    if end_date > today:
+        end_date = today  # Limit end_date to today if in future
+        
+    # Generate the date range for the specified year
+    total_days = (end_date - start_date).days + 1
+    yearly_data = {
+        (start_date + timedelta(days=i)).isoformat(): {
+            "availableHabits": 0,
+            "completedHabits": 0,
+            "completedTasks": [],
+            "completedHabitsList": [],
+            "completionRate": 0
+        } for i in range(total_days)
+    }
+    
     habits = Habit.query.all()
-    tasks = Task.query.filter(Task.completion_date.isnot(None)).all()
+    tasks = Task.query.filter(
+        Task.completion_date >= start_date,
+        Task.completion_date <= end_date
+    ).all()
     journal_entries = JournalEntry.query.all()
     
-    yearly_data = {}
-    
+    # Build a mapping of dates to available habits
     for habit in habits:
-        habit_dates = HabitDate.query.filter_by(habit_id=habit.id).all()
-        for habit_date in habit_dates:
-            date_str = str(habit_date.date)
-            if date_str not in yearly_data:
-                yearly_data[date_str] = {"completedHabits": [], "completedTasks": [], "journalEntries": []}
-            yearly_data[date_str]["completedHabits"].append(habit.name)
+        habit_days = habit.days.split(',') if habit.days else []
+        for date_str in yearly_data.keys():
+            date_obj = date.fromisoformat(date_str)
+            # Adjusting weekday calculation since strftime('%w') returns 0 for Sunday
+            weekday = str(date_obj.weekday())
+            if weekday in habit_days:
+                yearly_data[date_str]["availableHabits"] += 1
+                
+    # Mark completed habits
+    for habit in habits:
+        for habit_date in habit.dates:
+            if start_date <= habit_date.date <= end_date:
+                date_str = habit_date.date.isoformat()
+                if date_str in yearly_data:
+                    yearly_data[date_str]["completedHabits"] += 1
+                    yearly_data[date_str]["completedHabitsList"].append(habit.name)
     
+     # Record completed tasks
     for task in tasks:
-        date_str = str(task.completion_date)
-        if date_str not in yearly_data:
-            yearly_data[date_str] = {"completedHabits": [], "completedTasks": [], "journalEntries": []}
-        yearly_data[date_str]["completedTasks"].append(task.title)
+        date_str = task.completion_date.isoformat()
+        if date_str in yearly_data:
+            yearly_data[date_str]["completedTasks"].append(task.title)
+            
+    # Calculate completion rate
+    for date_str, data in yearly_data.items():
+        available = data["availableHabits"]
+        completed = data["completedHabits"]
+        data["completionRate"] = completed / available if available > 0 else None
     
     for entry in journal_entries:
         date_str = str(entry.date)
@@ -307,9 +348,12 @@ def get_yearly_data():
         yearly_data[date_str]["journalEntries"].append(entry.title)
     
     for date_str, data in yearly_data.items():
-        total_habits = len(habits)
-        completed_habits = len(data["completedHabits"])
-        data["completionRate"] = completed_habits / total_habits if total_habits > 0 else 0
+        available = data["availableHabits"]
+        completed = data["completedHabits"]
+        if available > 0:
+            data["completionRate"] = completed / available
+        else:
+            data["completionRate"] = None
     
     # Return the data with date strings as keys
     return jsonify(yearly_data)

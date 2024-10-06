@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Yearly Contribution Grid</title>
-    
-        <!-- Your custom CSS -->
-        <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='yearly_grid.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    
-    </head>
-    
+<head>
+    <meta charset="UTF-8">
+    <title>Yearly Contribution Grid</title>
+    <!-- Your custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='yearly_grid.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+</head>
 <body>
+    <!-- Menu Toggle -->
     <div id="menu-toggle">&#9776;</div>
     <nav id="slide-menu">
         <ul>
@@ -21,6 +17,30 @@
         </ul>
     </nav>
 
+    <!-- Main Content -->
+    <div id="content">
+        <!-- Year Navigation -->
+        <div id="year-navigation">
+            <button id="prev-year">←</button>
+            <span id="current-year"></span>
+            <button id="next-year">→</button>
+        </div>
+
+        <div id="heatmap-container"></div>
+    </div>
+
+    <!-- Modal for displaying details -->
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="modal-close">&times;</span>
+            <h2 id="modal-date"></h2>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/yearly_grid.js') }}"></script>
 </body>
 </html>
