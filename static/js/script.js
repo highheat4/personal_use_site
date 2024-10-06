@@ -1,65 +1,138 @@
 const columnOrder = ['to-do-week', 'to-do-today', 'in-progress', 'finished'];
 
+function createTaskElement(task) {
+  const taskElement = document.createElement('div');
+  taskElement.className = 'task-card';
+  taskElement.dataset.taskId = task.id;
+
+  taskElement.innerHTML = `
+    <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
+    <div class="task-buttons">
+      ${getButtonsForTask(task)}
+    </div>
+  `;
+  return taskElement;
+}
+
+function initializeSortable() {
+    columnOrder.forEach(columnId => {
+      const columnElement = document.getElementById(columnId);
+  
+      Sortable.create(columnElement, {
+        group: 'columns', // Enable moving items between columns
+        animation: 150,
+        handle: '.task-card',
+        draggable: '.task-card',
+        onEnd: function (evt) {
+          // Update task order in the client-side state here
+          // Optionally, save to localStorage or send to the server when appropriate
+        },
+      });
+    });
+  }
+  
+
+
+// function loadTasks() {
+//     axios.get('/api/tasks')
+//         .then(response => {
+//             const tasks = response.data;
+
+//             // Clear columns
+//             columnOrder.forEach(status => {
+//                 const column = document.getElementById(status);
+//                 column.innerHTML = `
+//                     <div class="column-header">
+//                         <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+//                         <span>...</span>
+//                     </div>
+//                 `;
+//             });
+
+//             tasks.forEach(task => {
+//                 const columnElement = document.getElementById(task.status);
+//                 if (!columnElement) 
+//                     return;
+
+//                 const taskElement = document.createElement('div');
+//                 taskElement.className = 'task-card';
+//                 taskElement.draggable = true;
+
+//                 taskElement.dataset.taskId = task.id;
+//                 taskElement.innerHTML = `
+//                     <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
+//                     <div class="task-buttons">
+//                         ${getButtonsForTask(task)}
+//                     </div>
+//                 `;
+
+//                 taskElement.addEventListener('dragstart', handleDragStart);
+//                 taskElement.addEventListener('dragend', handleDragEnd);
+//                 taskElement.addEventListener('dragover', handleDragOver);
+
+//                 columnElement.appendChild(taskElement);
+//             });
+
+//             // Add "Add a card" buttons to columns
+//             columnOrder.forEach(status => {
+//                 const column = document.getElementById(status);
+//                 column.addEventListener('dragover', handleDragOver);
+//                 column.addEventListener('drop', handleDrop);
+
+//                 const addCard = document.createElement('div');
+//                 addCard.className = 'add-card';
+//                 addCard.textContent = '+ Add a card';
+//                 addCard.onclick = () => addTask(status);
+//                 column.appendChild(addCard);
+//             });
+//         })
+//         .catch(error => {
+//             console.error('Error loading tasks:', error);
+//         });
+// }
+
 function loadTasks() {
     axios.get('/api/tasks')
-        .then(response => {
-            const tasks = response.data;
-
-            // Clear columns
-            columnOrder.forEach(status => {
-                const column = document.getElementById(status);
-                column.innerHTML = `
-                    <div class="column-header">
-                        <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-                        <span>...</span>
-                    </div>
-                `;
-            });
-
-            tasks.forEach(task => {
-                const columnElement = document.getElementById(task.status);
-                if (!columnElement) {
-                    // Skip tasks with statuses that don't have corresponding columns
-                    console.warn(`No column found for status '${task.status}'. Skipping task ID ${task.id}.`);
-                    return;
-                }
-
-                const taskElement = document.createElement('div');
-                taskElement.className = 'task-card';
-                taskElement.draggable = true;
-
-                taskElement.dataset.taskId = task.id;
-                taskElement.innerHTML = `
-                    <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
-                    <div class="task-buttons">
-                        ${getButtonsForTask(task)}
-                    </div>
-                `;
-
-                taskElement.addEventListener('dragstart', handleDragStart);
-                taskElement.addEventListener('dragend', handleDragEnd);
-                taskElement.addEventListener('dragover', handleDragOver);
-
-                columnElement.appendChild(taskElement);
-            });
-
-            // Add "Add a card" buttons to columns
-            columnOrder.forEach(status => {
-                const column = document.getElementById(status);
-                column.addEventListener('dragover', handleDragOver);
-                column.addEventListener('drop', handleDrop);
-
-                const addCard = document.createElement('div');
-                addCard.className = 'add-card';
-                addCard.textContent = '+ Add a card';
-                addCard.onclick = () => addTask(status);
-                column.appendChild(addCard);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading tasks:', error);
+      .then(response => {
+        const tasks = response.data;
+  
+        // Clear columns
+        columnOrder.forEach(status => {
+          const column = document.getElementById(status);
+          column.innerHTML = `
+            <div class="column-header">
+              <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+              <span>...</span>
+            </div>
+          `;
         });
-}
+  
+        tasks.forEach(task => {
+          const columnElement = document.getElementById(task.status);
+          if (!columnElement) return;
+  
+          const taskElement = createTaskElement(task);
+          columnElement.appendChild(taskElement);
+        });
+  
+        // Add "Add a card" buttons to columns
+        columnOrder.forEach(status => {
+          const column = document.getElementById(status);
+          const addCard = document.createElement('div');
+          addCard.className = 'add-card';
+          addCard.textContent = '+ Add a card';
+          addCard.onclick = () => addTask(status);
+          column.appendChild(addCard);
+        });
+  
+        // Initialize Sortable
+        initializeSortable();
+      })
+      .catch(error => {
+        console.error('Error loading tasks:', error);
+      });
+  }
+  
 
 let draggedTask = null;
 let placeholder = null;

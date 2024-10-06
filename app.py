@@ -17,6 +17,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
+#####################################################################* ARCHIVING TASKS #####################################################################
 def archive_tasks():
     with app.app_context():
         # Check last archive date
@@ -57,7 +59,7 @@ scheduler.add_job(archive_tasks, 'cron', hour=0, minute=0)  # Runs at 12:00 AM
 scheduler.add_job(archive_tasks, 'interval', minutes=15)
 scheduler.start()
 
-# Models
+#####################################################################* DB CLASSES #####################################################################
 class ArchiveInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     last_archive = db.Column(db.Date, nullable=False)
@@ -114,7 +116,7 @@ class JournalEntry(db.Model):
     date = db.Column(db.Date, nullable=False)
     ai_comment = db.Column(db.Text)
 
-# Routes
+#####################################################################* BASE ROUTES #####################################################################
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -123,7 +125,8 @@ def index():
 def yearly_grid():
     return render_template('yearly_grid.html')
 
-# API routes
+#####################################################################* API routes #####################################################################
+############################################## TASKS ##############################################
 @app.route('/api/tasks', methods=['GET', 'POST'])
 def handle_tasks():
     '''
@@ -183,6 +186,8 @@ def archive_completed_tasks():
     db.session.commit()
     return jsonify({'success': True})
 
+############################################## HABITS ##############################################
+
 @app.route('/api/habits', methods=['GET', 'POST'])
 def handle_habits():
     '''
@@ -202,34 +207,6 @@ def handle_habits():
             'name': habit.name,
             'days': habit.days.split(',') if habit.days else []
         } for habit in habits])
-        
-@app.route('/api/tasks/order', methods=['PUT'])
-def update_task_order():
-    data = request.json
-    task_id = data.get('taskId')
-    new_order = data.get('newOrder')
-    new_status = data.get('newStatus')
-    
-    if not task_id or new_order is None:
-        return jsonify({'success': False, 'error': 'Missing taskId or newOrder'}), 400
-    
-    try:
-        task = Task.query.get(task_id)
-        if task:
-            if new_status and new_status != task.status:
-                # If the status has changed, move the task to the end of the new status
-                max_order = db.session.query(db.func.max(Task.order)).filter(Task.status == new_status).scalar() or 0
-                task.order = max_order + 1
-                task.status = new_status
-            else:
-                # Otherwise, just update the order
-                task.order = new_order
-            
-            db.session.commit()
-            return jsonify({'success': True})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/habits/<int:habit_id>', methods=['PUT', 'DELETE'])
 def update_habit(habit_id):
@@ -263,6 +240,7 @@ def update_habit(habit_id):
         app.logger.error(f"An error occurred while updating habit {habit_id}: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+############################################## JOURNAL ##############################################
 @app.route('/api/journal', methods=['GET', 'POST'])
 def handle_journal():
     if request.method == 'POST':
@@ -300,6 +278,8 @@ def update_journal(entry_id):
         db.session.delete(entry)
         db.session.commit()
         return jsonify({'success': True})
+    
+############################################## HISTORY ##############################################
 
 @app.route('/api/history', methods=['GET'])
 def get_yearly_data():
