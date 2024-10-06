@@ -29,68 +29,8 @@ function initializeSortable() {
         },
       });
     });
-  }
+}
   
-
-
-// function loadTasks() {
-//     axios.get('/api/tasks')
-//         .then(response => {
-//             const tasks = response.data;
-
-//             // Clear columns
-//             columnOrder.forEach(status => {
-//                 const column = document.getElementById(status);
-//                 column.innerHTML = `
-//                     <div class="column-header">
-//                         <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-//                         <span>...</span>
-//                     </div>
-//                 `;
-//             });
-
-//             tasks.forEach(task => {
-//                 const columnElement = document.getElementById(task.status);
-//                 if (!columnElement) 
-//                     return;
-
-//                 const taskElement = document.createElement('div');
-//                 taskElement.className = 'task-card';
-//                 taskElement.draggable = true;
-
-//                 taskElement.dataset.taskId = task.id;
-//                 taskElement.innerHTML = `
-//                     <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
-//                     <div class="task-buttons">
-//                         ${getButtonsForTask(task)}
-//                     </div>
-//                 `;
-
-//                 taskElement.addEventListener('dragstart', handleDragStart);
-//                 taskElement.addEventListener('dragend', handleDragEnd);
-//                 taskElement.addEventListener('dragover', handleDragOver);
-
-//                 columnElement.appendChild(taskElement);
-//             });
-
-//             // Add "Add a card" buttons to columns
-//             columnOrder.forEach(status => {
-//                 const column = document.getElementById(status);
-//                 column.addEventListener('dragover', handleDragOver);
-//                 column.addEventListener('drop', handleDrop);
-
-//                 const addCard = document.createElement('div');
-//                 addCard.className = 'add-card';
-//                 addCard.textContent = '+ Add a card';
-//                 addCard.onclick = () => addTask(status);
-//                 column.appendChild(addCard);
-//             });
-//         })
-//         .catch(error => {
-//             console.error('Error loading tasks:', error);
-//         });
-// }
-
 function loadTasks() {
     axios.get('/api/tasks')
       .then(response => {
@@ -132,93 +72,6 @@ function loadTasks() {
         console.error('Error loading tasks:', error);
       });
   }
-  
-
-let draggedTask = null;
-let placeholder = null;
-
-function handleDragStart(event) {
-    draggedTask = event.target;
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/html', draggedTask.outerHTML);
-    draggedTask.classList.add('dragging');
-    
-    // Create placeholder
-    placeholder = document.createElement('div');
-    placeholder.className = 'task-card placeholder';
-    placeholder.style.height = `${draggedTask.offsetHeight}px`;
-}
-
-function handleDragOver(event) {
-    event.preventDefault();
-    const column = event.currentTarget;
-    const afterElement = getDragAfterElement(column, event.clientY);
-    
-    if (afterElement) {
-        column.insertBefore(placeholder, afterElement);
-    } else {
-        const lastTaskCard = column.querySelector('.task-card:last-of-type');
-        if (lastTaskCard) {
-            column.insertBefore(placeholder, lastTaskCard.nextSibling);
-        }
-    }
-}
-
-function handleDrop(event) {
-    event.preventDefault();
-    const column = event.currentTarget;
-    column.removeChild(placeholder);
-    
-    if (draggedTask.parentElement !== column) {
-        const lastTaskCard = column.querySelector('.task-card:last-of-type');
-        if (lastTaskCard) {
-            column.insertBefore(draggedTask, lastTaskCard.nextSibling);
-        } else {
-            column.insertBefore(draggedTask, column.querySelector('.add-card'));
-        }
-        moveTask(draggedTask.dataset.taskId, column.id);
-    } else {
-        const afterElement = getDragAfterElement(column, event.clientY);
-        if (afterElement) {
-            column.insertBefore(draggedTask, afterElement);
-        } else {
-            const lastTaskCard = column.querySelector('.task-card:last-of-type');
-            if (lastTaskCard && lastTaskCard !== draggedTask) {
-                column.insertBefore(draggedTask, lastTaskCard.nextSibling);
-            }
-        }
-    }
-    updateTaskOrder(column);
-}
-
-function handleDragEnd(event) {
-    draggedTask.classList.remove('dragging');
-    draggedTask = null;
-    if (placeholder && placeholder.parentNode) {
-        placeholder.parentNode.removeChild(placeholder);
-    }
-    placeholder = null;
-}
-
-function getDragAfterElement(column, y) {
-    const draggableElements = [...column.querySelectorAll('.task-card:not(.dragging):not(.placeholder)')];
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-function updateTaskOrder(column) {
-    const tasks = column.querySelectorAll('.task-card');
-    const order = Array.from(tasks).map(task => task.dataset.taskId);
-    axios.put('/api/tasks/order', { order, status: column.id }) //! WE don't have an api/tasks/order!
-        .then(() => loadTasks());
-}
 
 function getButtonsForTask(task) {
     switch (task.status) {
@@ -321,55 +174,92 @@ function loadHabits() {
             const habitsContainer = document.getElementById('habits');
             habitsContainer.innerHTML = '';
             const today = new Date();
+            const todayStr = today.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+            const todayWeekday = today.getDay().toString(); // '0' (Sunday) to '6' (Saturday)
+
             habits.forEach(habit => {
+                const isAvailableToday = habit.days.includes(todayWeekday);
+                if (!isAvailableToday) {
+                    // Skip habits not scheduled for today
+                    return;
+                }
+
                 const habitElement = document.createElement('div');
-                const today = new Date().toISOString().split('T')[0];
-                const isAvailableToday = habit.days.includes(today.getDay().toString());
-                const isCompletedToday = habit.dates.some(date => 
-                    new Date(date).toDateString() === today.toDateString()
-                );
-                habitElement.className = `habit ${isAvailableToday ? 'habit-available' : 'habit-unavailable'} ${isCompletedToday ? 'habit-complete' : 'habit-incomplete'}`;
-                habitElement.textContent = habit.name;
-                //if (isAvailableToday) {
-                    habitElement.onclick = () => toggleHabit(habit.id);
-                //}
+                const habitDates = habit.dates || [];
+                const isCompletedToday = habitDates.includes(todayStr);
+
+                habitElement.className = `habit ${isCompletedToday ? 'habit-complete' : 'habit-incomplete'}`;
+                habitElement.innerHTML = `<h3>${habit.name}</h3>`;
+                habitElement.onclick = () => toggleHabit(habitElement, habit.id);
                 habitsContainer.appendChild(habitElement);
             });
+        })
+        .catch(error => {
+            console.error('Error loading habits:', error);
         });
 }
 
 function addHabit() {
     const name = document.getElementById('new-habit').value;
-    const days = []; // You might want to add a way for users to select days
+    const dayCheckboxes = document.querySelectorAll('#day-select input[type="checkbox"]:checked');
+    const days = Array.from(dayCheckboxes).map(cb => cb.value);
     if (name) {
         axios.post('/api/habits', { name, days })
             .then(() => {
                 document.getElementById('new-habit').value = '';
+                // Clear checkboxes
+                document.querySelectorAll('#day-select input[type="checkbox"]').forEach(cb => cb.checked = false);
                 loadHabits();
             });
     }
 }
 
-function toggleHabit(habitId) {
+function toggleHabit(element, habitId) {
     const today = new Date().toISOString().split('T')[0];
+
+    // Toggle the visual state immediately
+    const isCurrentlyCompleted = element.classList.contains('habit-complete');
+
+    if (isCurrentlyCompleted) {
+        // Remove 'habit-complete', add 'habit-incomplete'
+        element.classList.remove('habit-complete');
+        element.classList.add('habit-incomplete');
+    } else {
+        // Add 'habit-complete', remove 'habit-incomplete'
+        element.classList.add('habit-complete');
+        element.classList.remove('habit-incomplete');
+    }
+
+    // Send the request to the backend
     axios.put(`/api/habits/${habitId}`, { toggle_date: today })
-    .then(response => {
-        if (response.data.success) {
-            console.log(`Habit ${habitId} toggled successfully`);
-            loadHabits();
-        } else {
-            console.error(`Failed to toggle habit ${habitId}`);
-        }
-    })
-    .catch(error => {
-        console.error('Error toggling habit:', error.response ? error.response.data : error.message);
-    });
+        .then(response => {
+            if (!response.data.success) {
+                console.error(`Failed to toggle habit ${habitId}`);
+                // Optionally revert the visual change if the backend fails
+                toggleVisualState(element);
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling habit:', error.response ? error.response.data : error.message);
+            // Optionally revert the visual change if the backend fails
+            toggleVisualState(element);
+        });
 }
 
-document.getElementById('menu-toggle').addEventListener('click', function() {
-    document.body.classList.toggle('menu-active');
-});
+// Helper function to revert visual state if needed
+function toggleVisualState(element) {
+    const isCompleted = element.classList.contains('habit-complete');
+    if (isCompleted) {
+        element.classList.remove('habit-complete');
+        element.classList.add('habit-incomplete');
+    } else {
+        element.classList.add('habit-complete');
+        element.classList.remove('habit-incomplete');
+    }
+}
 
-// Load tasks and habits on page load
-loadTasks();
-loadHabits();
+document.addEventListener('DOMContentLoaded', function () {
+    // Load tasks and habits on page load
+    loadTasks();
+    loadHabits();
+});

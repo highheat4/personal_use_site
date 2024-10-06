@@ -196,49 +196,46 @@ def handle_habits():
     '''
     if request.method == 'POST':
         data = request.json
-        new_habit = Habit(name=data['name'], days=','.join(data.get('days', [])))
+        new_habit = Habit(name=data['name'], days=','.join(map(str, data.get('days', []))))
         db.session.add(new_habit)
         db.session.commit()
         return jsonify(id=new_habit.id, name=new_habit.name, days=new_habit.days.split(','))
     else:
-        habits = Habit.query.all()
-        return jsonify([{
-            'id': habit.id,
-            'name': habit.name,
-            'days': habit.days.split(',') if habit.days else []
-        } for habit in habits])
+        habits_data = []
+        for habit in Habit.query.all():
+            habit_data = {
+                'id': habit.id,
+                'name': habit.name,
+                'days': habit.days.split(',') if habit.days else [],
+                'dates': [habit_date.date.isoformat() for habit_date in habit.dates]
+            }
+            habits_data.append(habit_data)
+        
+        return jsonify(habits_data)
 
 @app.route('/api/habits/<int:habit_id>', methods=['PUT', 'DELETE'])
 def update_habit(habit_id):
-    '''
-    PUT    request: Change Habit name and days
-    DELETE request: Delete the habit
-    '''
-    try:
-        habit = Habit.query.get_or_404(habit_id)
-        if request.method == 'PUT':
-            data = request.json
-            if 'name' in data:
-                habit.name = data['name']
-            if 'days' in data:
-                habit.days = ','.join(map(str, data['days']))
-            if 'toggle_date' in data:
-                toggle_date = date.fromisoformat(data['toggle_date'])
-                existing_date = HabitDate.query.filter_by(habit_id=habit.id, date=toggle_date).first()
-                if existing_date:
-                    db.session.delete(existing_date)
-                else:
-                    new_date = HabitDate(habit_id=habit.id, date=toggle_date)
-                    db.session.add(new_date)
-            db.session.commit()
-            return jsonify({'success': True})
-        elif request.method == 'DELETE':
-            db.session.delete(habit)
-            db.session.commit()
-            return jsonify({'success': True})
-    except Exception as e:
-        app.logger.error(f"An error occurred while updating habit {habit_id}: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+    habit = Habit.query.get_or_404(habit_id)
+    if request.method == 'PUT':
+        data = request.json
+        if 'name' in data:
+            habit.name = data['name']
+        if 'days' in data:
+            habit.days = ','.join(map(str, data['days']))
+        if 'toggle_date' in data:
+            toggle_date = date.fromisoformat(data['toggle_date'])
+            existing_date = HabitDate.query.filter_by(habit_id=habit.id, date=toggle_date).first()
+            if existing_date:
+                db.session.delete(existing_date)
+            else:
+                new_date = HabitDate(habit_id=habit.id, date=toggle_date)
+                db.session.add(new_date)
+        db.session.commit()
+        return jsonify({'success': True})
+    elif request.method == 'DELETE':
+        db.session.delete(habit)
+        db.session.commit()
+        return jsonify({'success': True})
 
 ############################################## JOURNAL ##############################################
 @app.route('/api/journal', methods=['GET', 'POST'])

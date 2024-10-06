@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Yearly Contribution Grid</title>
     
         <!-- Your custom CSS -->
@@ -17,9 +18,9 @@
         <ul>
             <li><a href="/">Habit Tracker</a></li>
             <li><a href="/yearly-grid">Yearly Grid</a></li>
-            <input type="text" id="new-habit" placeholder="New habit">
-            <button onclick="addHabit()">Add Habit</button>
         </ul>
     </nav>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
 </body>
 </html>

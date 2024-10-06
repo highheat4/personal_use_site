@@ -15,8 +15,19 @@
         <ul>
             <li><a href="/">Habit Tracker</a></li>
             <li><a href="/yearly-grid">Yearly Grid</a></li>
-            <input type="text" id="new-habit" placeholder="New habit">
-            <button onclick="addHabit()">Add Habit</button>
+            <li>
+                <input type="text" id="new-habit" placeholder="New habit">
+                <div id="day-select">
+                    <label><input type="checkbox" value="0"> Sun</label>
+                    <label><input type="checkbox" value="1"> Mon</label>
+                    <label><input type="checkbox" value="2"> Tue</label>
+                    <label><input type="checkbox" value="3"> Wed</label>
+                    <label><input type="checkbox" value="4"> Thu</label>
+                    <label><input type="checkbox" value="5"> Fri</label>
+                    <label><input type="checkbox" value="6"> Sat</label>
+                </div>
+                <button onclick="addHabit()">Add Habit</button>
+            </li>
         </ul>
     </nav>
     
@@ -57,6 +68,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
