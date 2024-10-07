@@ -61,6 +61,10 @@ function renderHeatmap(data, year) {
 
     // Iterate over each month
     for (let month = 0; month < 12; month++) {
+        if (currentYear >= currentDate.getFullYear() && month > currentDate.getMonth()) {
+            break;
+        }
+
         const monthColumn = document.createElement('div');
         monthColumn.classList.add('month-column');
 

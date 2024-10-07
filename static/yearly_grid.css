@@ -50,6 +50,8 @@ body {
     flex-wrap: wrap; /* Allow wrapping if needed */
     justify-content: center;
     align-items: flex-start;
+    margin-left: 150px;
+    margin-right: 150px;
 }
 
 .month-column {
@@ -68,8 +70,8 @@ body {
 
 .weekdays-row {
     display: grid;
-    grid-template-columns: repeat(7, 25px); /* Adjust width to match day-cell */
-    gap: 2px;
+    grid-template-columns: repeat(7, 30px); /* Adjust width to match day-cell */
+    gap: 4px;
     margin-bottom: 5px;
 }
 
@@ -81,14 +83,14 @@ body {
 
 .days-grid {
     display: grid;
-    grid-template-columns: repeat(7, 25px);
-    gap: 2px;
+    grid-template-columns: repeat(7, 30px);
+    gap: 4px;
 }
 
 .day-cell {
-    width: 25px;
-    height: 25px;
-    /* margin: 1px; */
+    width: 30px;
+    height: 30px;
+    /* margin: 2px; */
     background-color: #444;
     cursor: pointer;
 }
