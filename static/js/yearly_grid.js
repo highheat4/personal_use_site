@@ -105,7 +105,7 @@ function renderHeatmap(data, year) {
         // Create day cells
         for (let day = 1; day <= daysInMonth; day++) {
 
-            if (currentYear == currentDate.getFullYear() && (month == currentDate.getMonth() && day > currentDate.getDate()) || (month > currentDate.getMonth())) {
+            if (currentYear >= currentDate.getFullYear() && (month == currentDate.getMonth() && day > currentDate.getDate() || (month > currentDate.getMonth()))) {
                 break;
             }
 
