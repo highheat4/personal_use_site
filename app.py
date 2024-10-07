@@ -31,7 +31,8 @@ def archive_tasks():
             tasks = Task.query.filter(Task.status == 'finished')
             for task in tasks:
                 task.status = 'archived'
-                task.completion_date = date.today()
+                if task.completion_date == None:
+                    task.completion_date = date.today() - timedelta(days=1)
             db.session.commit()
 
             # Update the archive info in the database
@@ -55,7 +56,7 @@ job_defaults = {
 }
 
 scheduler = BackgroundScheduler(executors=executors, job_defaults=job_defaults)
-scheduler.add_job(archive_tasks, 'cron', hour=0, minute=0)  # Runs at 12:00 AM
+scheduler.add_job(archive_tasks, 'cron', hour=0, minute=1)  # Runs at 12:01 AM
 # Periodic job to check every 15 minutes if archiving was missed
 scheduler.add_job(archive_tasks, 'interval', minutes=15)
 scheduler.start()
@@ -168,7 +169,7 @@ def update_task(task_id):
             task.title = data.get('title', task.title)
             task.status = data.get('status', task.status)
             task.column = data.get('column', task.column)
-            if data.get('status') == 'finished':
+            if task.status == 'finished':
                 task.completion_date = date.today()
             else:
                 task.completion_date = None
@@ -184,7 +185,8 @@ def archive_completed_tasks():
     tasks = Task.query.filter(Task.status == 'finished')
     for task in tasks:
         task.status = 'archived'
-        task.completion_date = date.today()
+        if task.completion_date == None:
+            task.completion_date = date.today() - timedelta(days=1)
     db.session.commit()
     return jsonify({'success': True})
 
