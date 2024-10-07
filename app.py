@@ -31,6 +31,7 @@ def archive_tasks():
             tasks = Task.query.filter(Task.status == 'finished')
             for task in tasks:
                 task.status = 'archived'
+                task.completion_date = date.today()
             db.session.commit()
 
             # Update the archive info in the database
@@ -183,6 +184,7 @@ def archive_completed_tasks():
     tasks = Task.query.filter(Task.status == 'finished')
     for task in tasks:
         task.status = 'archived'
+        task.completion_date = date.today()
     db.session.commit()
     return jsonify({'success': True})
 
