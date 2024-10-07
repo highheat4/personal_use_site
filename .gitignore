@@ -2,4 +2,5 @@ env/
 migrations/
 app.db
 static/dark_bgd.jpg
+static/dark_bgd.avif
 node_modules/

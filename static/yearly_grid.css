@@ -47,54 +47,59 @@ body {
 .heatmap-grid {
     display: flex;
     flex-direction: row;
-    margin-left: 40px; /* Space for weekday labels */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    justify-content: center;
+    align-items: flex-start;
 }
 
-.week-column {
+.month-column {
     display: flex;
     flex-direction: column;
+    margin: 10px; /* Adjust spacing between months */
+}
+
+.month-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.weekdays-row {
+    display: grid;
+    grid-template-columns: repeat(7, 25px); /* Adjust width to match day-cell */
+    gap: 2px;
+    margin-bottom: 5px;
+}
+
+.weekday-label {
+    text-align: center;
+    font-size: 10px;
+    color: #ccc;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 25px);
+    gap: 2px;
 }
 
 .day-cell {
     width: 25px;
     height: 25px;
-    margin: 4px;
-    cursor: pointer;
+    /* margin: 1px; */
     background-color: #444;
     cursor: pointer;
 }
 
-.day-cell.not-clickable {
+.empty-cell {
+    background-color: transparent;
     cursor: default;
 }
 
-.months-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-left: -23px; /* Adjust based on the width of your weekday labels */
-}
-
-/* Optional: Set flex properties for .month-label if needed */
-.month-label {
-    font-size: 12px;
-    color: #fff;
-    text-align: center;
-    box-sizing: border-box;
-    /* Remove any properties that might force stacking */
-}
-
-.weekdays-column {
-    position: absolute;
-    top: 25px;
-    left: 0;
-}
-
-.weekday-label {
-    height: 17px;
-    margin: 2px;
-    font-size: 12px;
-    color: #fff;
+.clickable {
+    cursor: pointer;
 }
 
 .modal {

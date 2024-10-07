@@ -49,36 +49,68 @@ function fetchHistoryData(year) {
 }
 
 function renderHeatmap(data, year) {
-    // Get the container
     const container = document.getElementById('heatmap-container');
     container.innerHTML = '';
+    const currentDate = new Date();
 
-    const startDate = new Date(year, 0, 1); // Jan 1st of the specified year
-    const today = new Date();
-    const endDate = (year === today.getFullYear()) ? today : new Date(year, 11, 31);
-    const dateIterator = new Date(startDate);
-
-    // Create a map for quick data access
     const dataMap = new Map(Object.entries(data));
 
-    // Calculate total weeks
-    const totalDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-    const totalWeeks = Math.ceil(totalDays / 7);
-
-    // Create the grid
+    // Create the main grid container
     const grid = document.createElement('div');
     grid.classList.add('heatmap-grid');
 
-    for (let week = 0; week <= totalWeeks; week++) {
-        const weekColumn = document.createElement('div');
-        weekColumn.classList.add('week-column');
+    // Iterate over each month
+    for (let month = 0; month < 12; month++) {
+        const monthColumn = document.createElement('div');
+        monthColumn.classList.add('month-column');
 
-        for (let day = 0; day < 7; day++) {
-            if (dateIterator.getFullYear() !== year || dateIterator > endDate) {
+        const monthDate = new Date(year, month, 1);
+        const monthName = monthDate.toLocaleString('default', { month: 'short' });
+
+        // Create the month label
+        const monthLabel = document.createElement('div');
+        monthLabel.classList.add('month-label');
+        monthLabel.textContent = monthName;
+        monthColumn.appendChild(monthLabel);
+
+        // Optionally, add weekday labels
+        const weekdaysRow = document.createElement('div');
+        weekdaysRow.classList.add('weekdays-row');
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        weekdays.forEach(dayName => {
+            const weekdayLabel = document.createElement('div');
+            weekdayLabel.classList.add('weekday-label');
+            weekdayLabel.textContent = dayName;
+            weekdaysRow.appendChild(weekdayLabel);
+        });
+        monthColumn.appendChild(weekdaysRow);
+
+        // Get the weekday of the first day of the month
+        const firstWeekday = monthDate.getDay();
+
+        // Create a grid for days
+        const daysGrid = document.createElement('div');
+        daysGrid.classList.add('days-grid');
+
+        // Add empty cells for days before the first of the month
+        for (let i = 0; i < firstWeekday; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('day-cell', 'empty-cell');
+            daysGrid.appendChild(emptyCell);
+        }
+
+        // Get total days in the month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Create day cells
+        for (let day = 1; day <= daysInMonth; day++) {
+
+            if (currentYear == currentDate.getFullYear() && (month == currentDate.getMonth() && day > currentDate.getDate()) || (month > currentDate.getMonth())) {
                 break;
             }
 
-            const dateStr = dateIterator.toISOString().split('T')[0];
+            const date = new Date(year, month, day);
+            const dateStr = date.toISOString().split('T')[0];
 
             const dayCell = document.createElement('div');
             dayCell.classList.add('day-cell');
@@ -97,11 +129,11 @@ function renderHeatmap(data, year) {
                     dayCell.style.backgroundColor = '#444'; // Darker shade for no habits
                 }
             } else {
-                // Dates with no data (should not happen with the updated backend)
+                // Dates with no data
                 dayCell.style.backgroundColor = '#444';
             }
 
-            // Make the cell clickable regardless of data
+            // Make the cell clickable
             dayCell.classList.add('clickable');
             dayCell.addEventListener('click', () => {
                 if (dayData) {
@@ -117,23 +149,19 @@ function renderHeatmap(data, year) {
                 }
             });
 
-            weekColumn.appendChild(dayCell);
-
-            // Move to the next day
-            dateIterator.setDate(dateIterator.getDate() + 1);
+            daysGrid.appendChild(dayCell);
         }
 
-        grid.appendChild(weekColumn);
+        monthColumn.appendChild(daysGrid);
+        grid.appendChild(monthColumn);
     }
 
     // Append grid to container
     container.appendChild(grid);
 
-    // Add month labels
-    renderMonthLabels(container, startDate, endDate, totalWeeks);
-
-    // Add weekday labels
-    renderWeekdayLabels(container);
+    // Remove calls to renderMonthLabels and renderWeekdayLabels
+    // renderMonthLabels(container, startDate, endDate, totalWeeks);
+    // renderWeekdayLabels(container);
 }
 function getShade(completionRate) {
     // Shades suitable for dark background

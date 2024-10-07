@@ -3,7 +3,7 @@ body {
     margin: 0;
     padding: 0;
     transition: margin-left 0.3s;
-    background-image: url("/static/dark_bgd.jpg");
+    background-image: url("/static/dark_bgd.avif");
     background-size: cover;
 }
 
