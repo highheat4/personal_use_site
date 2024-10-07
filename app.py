@@ -318,7 +318,7 @@ def get_yearly_data():
         for date_str in yearly_data.keys():
             date_obj = date.fromisoformat(date_str)
             # Adjusting weekday calculation since strftime('%w') returns 0 for Sunday
-            weekday = str(date_obj.weekday())
+            weekday = str((date_obj.weekday() + 1) % 7)
             if weekday in habit_days:
                 yearly_data[date_str]["availableHabits"] += 1
                 

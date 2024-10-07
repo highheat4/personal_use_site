@@ -203,6 +203,7 @@ function addHabit() {
     const name = document.getElementById('new-habit').value;
     const dayCheckboxes = document.querySelectorAll('#day-select input[type="checkbox"]:checked');
     const days = Array.from(dayCheckboxes).map(cb => cb.value);
+    // console.log(days)
     if (name) {
         axios.post('/api/habits', { name, days })
             .then(() => {
