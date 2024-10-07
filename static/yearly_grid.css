@@ -135,3 +135,19 @@ body {
 .close-button:hover {
     color: red;
 }
+
+.toggle-container {
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.toggle-container label {
+    display: block;
+    margin-bottom: 5px;
+    color: #fff;  /* Assuming a dark theme */
+}
+
+.toggle-container select {
+    width: 100%;
+    padding: 5px;
+}

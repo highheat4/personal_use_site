@@ -1,4 +1,5 @@
 let currentYear = new Date().getFullYear();
+let displayMode = 'habits';
 const dayWidth = 30;  // Updated width of each day square
 const dayHeight = 30; // Updated height of each day square
 const gutter = 2;     // Space between squares
@@ -15,6 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('next-year').addEventListener('click', () => {
         currentYear++;
+        updateYearlyGrid();
+    });
+
+    // Add event listener to the display mode toggle
+    const displayModeSelect = document.getElementById('display-mode');
+    displayModeSelect.value = displayMode; // Set default value
+    displayModeSelect.addEventListener('change', () => {
+        displayMode = displayModeSelect.value;
         updateYearlyGrid();
     });
 
@@ -40,7 +49,7 @@ function fetchHistoryData(year) {
     axios.get(`/api/history?year=${year}`)
         .then(response => {
             const data = response.data;
-            renderHeatmap(data, year);
+            renderHeatmap(data, year, displayMode); // Pass displayMode
         })
         .catch(error => {
             console.error('Error fetching history data:', error);
@@ -48,7 +57,7 @@ function fetchHistoryData(year) {
         });
 }
 
-function renderHeatmap(data, year) {
+function renderHeatmap(data, year, displayMode) {
     const container = document.getElementById('heatmap-container');
     container.innerHTML = '';
     const currentDate = new Date();
@@ -121,21 +130,18 @@ function renderHeatmap(data, year) {
             dayCell.dataset.date = dateStr;
 
             const dayData = dataMap.get(dateStr);
+            let shade = '#444';
 
             if (dayData) {
-                const completionRate = dayData.completionRate;
-
-                if (completionRate !== null) {
-                    const shade = getShade(completionRate);
-                    dayCell.style.backgroundColor = shade;
-                } else {
-                    // No habits available on this day
-                    dayCell.style.backgroundColor = '#444'; // Darker shade for no habits
+                if (displayMode === 'habits') {
+                    shade = getHabitShade(dayData);
+                } else if (displayMode === 'tasks') {
+                    shade = getTaskShade(dayData);
                 }
             } else {
-                // Dates with no data
-                dayCell.style.backgroundColor = '#444';
+                shade = '#444'; // Default shade when no data
             }
+            dayCell.style.backgroundColor = shade;
 
             // Make the cell clickable
             dayCell.classList.add('clickable');
@@ -167,29 +173,60 @@ function renderHeatmap(data, year) {
     // renderMonthLabels(container, startDate, endDate, totalWeeks);
     // renderWeekdayLabels(container);
 }
-function getShade(completionRate) {
-    // Shades suitable for dark background
+
+
+function getHabitShade(dayData) {
     const shades = [
         '#2c2c2c', // No habits available (darkest)
-        '#3b3b3b', // 0% (no habits completed)
+        '#3b3b3b', // 0% completion
         '#255f3f', // >0% up to 25%
         '#2e8b57', // >25% up to 50%
         '#3cb371', // >50% up to 75%
         '#66cdaa'  // >75% to 100% (lightest)
     ];
 
-    if (completionRate === null) {
+    if (!dayData || dayData.completionRate === null) {
         return shades[0]; // No habits available
-    } else if (completionRate === 0) {
-        return shades[1]; // No habits completed
-    } else if (completionRate <= 0.25) {
-        return shades[2];
-    } else if (completionRate <= 0.5) {
-        return shades[3];
-    } else if (completionRate <= 0.75) {
-        return shades[4];
     } else {
-        return shades[5];
+        const completionRate = dayData.completionRate;
+        if (completionRate === 0) {
+            return shades[1];
+        } else if (completionRate <= 0.25) {
+            return shades[2];
+        } else if (completionRate <= 0.5) {
+            return shades[3];
+        } else if (completionRate <= 0.75) {
+            return shades[4];
+        } else {
+            return shades[5];
+        }
+    }
+}
+function getTaskShade(dayData) {
+    const shades = [
+        '#2c2c2c', // No tasks completed
+        '#444444', // 1 task
+        '#666666', // 2 tasks
+        '#888888', // 3 tasks
+        '#aaaaaa', // 4 tasks
+        '#cccccc', // 5+ tasks
+    ];
+
+    if (!dayData || dayData.completedTasks.length === 0) {
+        return shades[0];
+    } else {
+        const tasksCompleted = dayData.completedTasks.length;
+        if (tasksCompleted === 1) {
+            return shades[1];
+        } else if (tasksCompleted === 2) {
+            return shades[2];
+        } else if (tasksCompleted === 3) {
+            return shades[3];
+        } else if (tasksCompleted === 4) {
+            return shades[4];
+        } else {
+            return shades[5];
+        }
     }
 }
 
