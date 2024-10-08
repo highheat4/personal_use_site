@@ -1,5 +1,5 @@
 let currentYear = new Date().getFullYear();
-let displayMode = 'habits';
+let displayMode = 'combined';
 const dayWidth = 30;  // Updated width of each day square
 const dayHeight = 30; // Updated height of each day square
 const gutter = 2;     // Space between squares
@@ -133,7 +133,9 @@ function renderHeatmap(data, year, displayMode) {
             let shade = '#444';
 
             if (dayData) {
-                if (displayMode === 'habits') {
+                if (displayMode === 'combined') {
+                    shade = getCombinedShade(dayData);
+                } else if (displayMode === 'habits') {
                     shade = getHabitShade(dayData);
                 } else if (displayMode === 'tasks') {
                     shade = getTaskShade(dayData);
@@ -174,15 +176,63 @@ function renderHeatmap(data, year, displayMode) {
     // renderWeekdayLabels(container);
 }
 
+////////////////////* https://yeun.github.io/open-color/ for colors *////////////////////////
+function getCombinedShade(dayData) {
+    const shades = [
+        '#3b3b3b', // No tasks completed
+        '#106030', // 1 task
+        '#2b8a3e', // 2 tasks
+        '#2f9e44', // 3 tasks
+        '#37b24d', // 4 tasks
+        '#40c057', // 5 tasks
+        '#51cf66', // 6 tasks
+        '#69db7c', // 7 tasks
+        '#8ce99a', // 8 tasks
+        '#b2f2bb', // 9 tasks
+        '#d3f9d8', // 10 tasks
+        '#ebfbee', // 11+ tasks
+    ];
 
+    if (!dayData || dayData.completedTasks.length + dayData.completedHabits === 0) {
+        return shades[0];
+    } else {
+        const combinedCompleted = dayData.completedTasks.length + dayData.completedHabits;
+        if (combinedCompleted === 1) {
+            return shades[1];
+        } else if (combinedCompleted === 2) {
+            return shades[2];
+        } else if (combinedCompleted === 3) {
+            return shades[3];
+        } else if (combinedCompleted === 4) {
+            return shades[4];
+        } else if (combinedCompleted === 5) {
+            return shades[5];
+        } else if (combinedCompleted === 6) {
+            return shades[6];
+        } else if (combinedCompleted === 7) {
+            return shades[7];
+        } else if (combinedCompleted === 8) {
+            return shades[8];
+        } else if (combinedCompleted === 9) {
+            return shades[9];
+        } else if (combinedCompleted === 10) {
+            return shades[10];
+        } else {
+            return shades[11];
+        }
+    }
+}
 function getHabitShade(dayData) {
     const shades = [
         '#2c2c2c', // No habits available (darkest)
         '#3b3b3b', // 0% completion
-        '#255f3f', // >0% up to 25%
-        '#2e8b57', // >25% up to 50%
-        '#3cb371', // >50% up to 75%
-        '#66cdaa'  // >75% to 100% (lightest)
+        '#1864ab', // 10% completion
+        '#1971c2', // 25% completion
+        '#1c7ed6', // 40% completion
+        '#228be6', // 65% completion
+        '#339af0', // 75% completion
+        '#4dabf7', // 85% completion
+        '#74c0fc'  // 100% completion
     ];
 
     if (!dayData || dayData.completionRate === null) {
@@ -191,25 +241,37 @@ function getHabitShade(dayData) {
         const completionRate = dayData.completionRate;
         if (completionRate === 0) {
             return shades[1];
-        } else if (completionRate <= 0.25) {
+        } else if (completionRate <= 0.1) {
             return shades[2];
-        } else if (completionRate <= 0.5) {
+        } else if (completionRate <= 0.25) {
             return shades[3];
-        } else if (completionRate <= 0.75) {
+        } else if (completionRate <= 0.40) {
             return shades[4];
-        } else {
+        } else if (completionRate <= 0.65) {
             return shades[5];
+        } else if (completionRate <= 0.75) {
+            return shades[6];
+        } else if (completionRate <= 0.85) {
+            return shades[7];
+        } else {
+            return shades[8];
         }
     }
 }
 function getTaskShade(dayData) {
     const shades = [
-        '#2c2c2c', // No tasks completed
-        '#444444', // 1 task
-        '#666666', // 2 tasks
-        '#888888', // 3 tasks
-        '#aaaaaa', // 4 tasks
-        '#cccccc', // 5+ tasks
+        '#3b3b3b', // No tasks completed
+        '#3E0101', // 1 task
+        '#8B0000', // 2 tasks
+        '#C92A2A', // 3 tasks
+        '#E03030', // 4 tasks
+        '#F03E3E', // 5 tasks
+        '#FA5353', // 6 tasks
+        '#FE6A6B', // 7 tasks
+        '#FF8787', // 8 tasks
+        '#FFC9C9', // 9 tasks
+        '#FFE2E2', // 10 tasks
+        '#FFF5F5', // 11+ tasks
     ];
 
     if (!dayData || dayData.completedTasks.length === 0) {
@@ -224,8 +286,20 @@ function getTaskShade(dayData) {
             return shades[3];
         } else if (tasksCompleted === 4) {
             return shades[4];
-        } else {
+        } else if (tasksCompleted === 5) {
             return shades[5];
+        } else if (tasksCompleted === 6) {
+            return shades[6];
+        } else if (tasksCompleted === 7) {
+            return shades[7];
+        } else if (tasksCompleted === 8) {
+            return shades[8];
+        } else if (tasksCompleted === 9) {
+            return shades[9];
+        } else if (tasksCompleted === 10) {
+            return shades[10];
+        } else {
+            return shades[11];
         }
     }
 }

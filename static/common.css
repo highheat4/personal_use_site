@@ -5,7 +5,6 @@ body {
     transition: margin-left 0.3s;
     background-image: url("/static/dark_bgd.avif");
     background-size: cover;
-    color: white;
 }
 
 .menu-active {
@@ -22,6 +21,25 @@ body {
     color: white;
 }
 
+.menu-active #menu-toggle {
+    /* top: 10px; */
+    /* margin-left: 200px; */
+    /* animation-name: fadeInOpacity; */
+	/* animation-iteration-count: 1;
+	animation-timing-function: ease-in;
+	animation-duration: 1s; */
+    transform: translateX(200px) translateY(-940px);
+    transition: transform 0.5s ease;
+}
+/* @keyframes fadeInOpacity { ! 
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+} */
+
 #slide-menu {
     position: fixed;
     left: -250px;
@@ -30,6 +48,7 @@ body {
     height: 100%;
     background-color: #333;
     transition: left 0.3s;
+    color: white;
 }
 
 .menu-active #slide-menu {
