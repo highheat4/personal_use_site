@@ -14,6 +14,14 @@ function createTaskElement(task) {
   return taskElement;
 }
 
+function getLocalDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2,'0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 function initializeSortable() {
     columnOrder.forEach(columnId => {
       const columnElement = document.getElementById(columnId);
@@ -173,9 +181,8 @@ function loadHabits() {
             const habits = response.data;
             const habitsContainer = document.getElementById('habits');
             habitsContainer.innerHTML = '';
-            const today = new Date();
-            const todayStr = today.toISOString().split('T')[0]; // 'YYYY-MM-DD'
-            const todayWeekday = today.getDay().toString(); // '0' (Sunday) to '6' (Saturday)
+            const todayStr = getLocalDateString(); // 'YYYY-MM-DD'
+            const todayWeekday = new Date().getDay().toString(); // '0' (Sunday) to '6' (Saturday)
 
             habits.forEach(habit => {
                 const isAvailableToday = habit.days.includes(todayWeekday);
@@ -216,7 +223,7 @@ function addHabit() {
 }
 
 function toggleHabit(element, habitId) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
 
     // Toggle the visual state immediately
     const isCurrentlyCompleted = element.classList.contains('habit-complete');

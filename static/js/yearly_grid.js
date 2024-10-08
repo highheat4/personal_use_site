@@ -4,6 +4,13 @@ const dayWidth = 30;  // Updated width of each day square
 const dayHeight = 30; // Updated height of each day square
 const gutter = 2;     // Space between squares
 
+function getLocalDateString(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2,'0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Set the current year display
     document.getElementById('current-year').textContent = currentYear;
@@ -123,7 +130,7 @@ function renderHeatmap(data, year, displayMode) {
             }
 
             const date = new Date(year, month, day);
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = getLocalDateString(date);
 
             const dayCell = document.createElement('div');
             dayCell.classList.add('day-cell');
