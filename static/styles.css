@@ -4,6 +4,94 @@ body {
     margin: 0;
     padding: 20px;
 }
+.habit-tracker {
+    margin-top: 20px;
+    align-items: center;
+    text-align: center;
+}
+.habit-tracker h2 {
+    color: white;
+}
+.habits-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.habit {
+    background-color: #fff;
+    border-radius: 8px;
+    /* width: 150px;
+    height: 100px; */
+    /* padding: 20px; Add padding to maintain size for incomplete habits */
+    box-shadow: 0px 3px 6px rgba(0,0,0,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+}
+
+.habit:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 12px rgba(0,0,0,0.2);
+}
+
+.habit-incomplete {
+    width: 150px; /* Original width */
+    height: 100px; /* Original height */
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+
+.habit-complete {
+    padding: 20px;
+    width: 30px;
+    height: 20px;
+    transform: translateY(-20px) scale(0.3); /* Move to the right and slightly enlarge */
+    opacity: 0.15; /* Fade out */
+}
+
+.habit-complete:hover {
+    opacity: 0.4;
+}
+
+.habit::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top: 10px solid #fff;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+}
+
+.habit h3 {
+    margin: 0;
+    font-size: 16px;
+    text-align: center;
+    color: #333;
+}
+
+.habit p {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #666;
+}
+.habit-incomplete { background-color: #ffff99; }
+.habit-complete { background-color: #99ff99; }
+
+.todoh2 {
+    margin-top: 60px;
+    color: white;
+    text-align: center;
+}
+
 .container {
     display: flex;
     justify-content: space-between;
@@ -97,122 +185,4 @@ body {
 .add-card:hover {
     background-color: rgba(9,30,66,.08);
     border-radius: 3px;
-}
-.habit-tracker {
-    margin-top: 20px;
-    align-items: center;
-    text-align: center;
-}
-.habits-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-.habit {
-    background-color: #fff;
-    border-radius: 8px;
-    width: 150px;
-    height: 100px;
-    box-shadow: 0px 3px 6px rgba(0,0,0,0.16);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.habit:hover {
-    transform: translateY(-5px);
-    box-shadow: 0px 6px 12px rgba(0,0,0,0.2);
-}
-
-.habit-incomplete {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-}
-
-.habit-complete {
-    transform: translateY(-40px) scale(0.3); /* Move to the right and slightly enlarge */
-    opacity: 0.15; /* Fade out */
-}
-
-.habit-complete:hover {
-    opacity: 0.4;
-}
-
-.habit::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-top: 10px solid #fff;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-}
-
-.habit h3 {
-    margin: 0;
-    font-size: 16px;
-    text-align: center;
-    color: #333;
-}
-
-.habit p {
-    margin: 5px 0 0 0;
-    font-size: 12px;
-    color: #666;
-}
-.habit-incomplete { background-color: #ffff99; }
-.habit-complete { background-color: #99ff99; }
-
-.slide-menu button {
-    padding: 5px 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-.slide-menu button:hover {
-    background-color: #45a049;
-}
-
-/* Modal styles */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* Centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover, .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
 }

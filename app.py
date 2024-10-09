@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import os
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,6 +16,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+cutoff_time = time(1, 0)
 
 
 #####################################################################* ARCHIVING TASKS #####################################################################
@@ -31,8 +33,8 @@ def archive_tasks():
             tasks = Task.query.filter(Task.status == 'finished')
             for task in tasks:
                 task.status = 'archived'
-                if task.completion_date == None:
-                    task.completion_date = date.today() - timedelta(days=1)
+                if task.completion_date is None or task.completion_date >= today:
+                    task.completion_date = today - timedelta(days=1)
             db.session.commit()
 
             # Update the archive info in the database
@@ -167,12 +169,25 @@ def update_task(task_id):
             return jsonify({'success': True, 'deleted': True})
         else:
             task.title = data.get('title', task.title)
-            task.status = data.get('status', task.status)
             task.column = data.get('column', task.column)
-            if task.status == 'finished':
-                task.completion_date = date.today()
-            else:
-                task.completion_date = None
+            if 'status' in data:
+                task.status = data['status']
+                if task.status == 'finished':
+                    # Accept completion_date from client or default to date.today()
+                    completion_date_str = data.get('completion_date')
+                    if completion_date_str:
+                        task.completion_date = datetime.strptime(completion_date_str, '%Y-%m-%d').date()
+                    else:
+                        current_time = datetime.now().time()
+                        # Define your cutoff time (e.g., 1:00 AM)
+                        global cutoff_time
+                        if current_time < cutoff_time:
+                            # After midnight but before cutoff_time, set to previous day
+                            task.completion_date = date.today() - timedelta(days=1)
+                        else:
+                            task.completion_date = date.today()
+                else:
+                    task.completion_date = None
             db.session.commit()
             return jsonify({'success': True, 'deleted': False})
     elif request.method == 'DELETE':
@@ -226,14 +241,24 @@ def update_habit(habit_id):
             habit.name = data['name']
         if 'days' in data:
             habit.days = ','.join(map(str, data['days']))
-        if 'toggle_date' in data:
-            toggle_date = date.fromisoformat(data['toggle_date'])
-            existing_date = HabitDate.query.filter_by(habit_id=habit.id, date=toggle_date).first()
-            if existing_date:
-                db.session.delete(existing_date)
-            else:
-                new_date = HabitDate(habit_id=habit.id, date=toggle_date)
-                db.session.add(new_date)
+            
+        # Define your cutoff time (e.g., 3:00 AM)
+        global cutoff_time  # Adjust to your desired cutoff hour
+        current_time = datetime.now().time()
+        if current_time < cutoff_time:
+            # After midnight but before cutoff_time, set to previous day
+            toggle_date = date.today() - timedelta(days=1)
+        else:
+            toggle_date = date.today()
+
+        # Proceed to toggle habit completion for the calculated date
+        existing_date = HabitDate.query.filter_by(habit_id=habit.id, date=toggle_date).first()
+        if existing_date:
+            db.session.delete(existing_date)
+        else:
+            new_date = HabitDate(habit_id=habit.id, date=toggle_date)
+            db.session.add(new_date)
+            
         db.session.commit()
         return jsonify({'success': True})
     elif request.method == 'DELETE':

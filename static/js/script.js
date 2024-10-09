@@ -153,8 +153,12 @@ function addTask(status) {
 }
 
 function moveTask(taskId, newStatus) {
-    axios.put(`/api/tasks/${taskId}`, { status: newStatus })
-        .then(() => loadTasks());
+    let data = { status: newStatus };
+    axios.put(`/api/tasks/${taskId}`, data)
+        .then(() => loadTasks())
+        .catch(error => {
+            console.error('Error moving task:', error);
+        });
 }
 
 function updateTaskTitle(taskId, element) {
@@ -223,8 +227,6 @@ function addHabit() {
 }
 
 function toggleHabit(element, habitId) {
-    const today = getLocalDateString();
-
     // Toggle the visual state immediately
     const isCurrentlyCompleted = element.classList.contains('habit-complete');
 
@@ -238,8 +240,8 @@ function toggleHabit(element, habitId) {
         element.classList.remove('habit-incomplete');
     }
 
-    // Send the request to the backend
-    axios.put(`/api/habits/${habitId}`, { toggle_date: today })
+    // Send the request to the backend without toggle_date
+    axios.put(`/api/habits/${habitId}`, {})
         .then(response => {
             if (!response.data.success) {
                 console.error(`Failed to toggle habit ${habitId}`);
