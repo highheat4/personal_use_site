@@ -91,13 +91,16 @@ class Task(db.Model):
     status = db.Column(db.String(20), nullable=False)
     completion_date = db.Column(db.Date)
     column = db.Column(db.String(20), default='To Do')
+    order = db.Column(db.Integer, nullable=False, default=0)  
+
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'status': self.status,
             'completion_date': self.completion_date.isoformat() if self.completion_date else None,
-            'column': self.column
+            'column': self.column,
+            'order': self.order  
         }
 
 class Habit(db.Model):
@@ -142,20 +145,15 @@ def handle_tasks():
         new_task = Task(
             title=data['title'],
             status=data['status'],
-            column=data.get('column', 'To Do')
+            column=data.get('column', 'To Do'),
+            order=data.get('order', 0)
         )
         db.session.add(new_task)
         db.session.commit()
-        return jsonify(id=new_task.id, title=new_task.title, status=new_task.status, column=new_task.column)
+        return jsonify(new_task.to_dict())
     else:
-        tasks = Task.query.all()
-        return jsonify([{
-            'id': task.id,
-            'title': task.title,
-            'status': task.status,
-            'completion_date': str(task.completion_date) if task.completion_date else None,
-            'column': task.column
-        } for task in tasks])
+        tasks = Task.query.order_by(Task.status, Task.order).all()
+        return jsonify([task.to_dict() for task in tasks])
 
 @app.route('/api/tasks/<int:task_id>', methods=['PUT', 'DELETE'])
 def update_task(task_id):
@@ -170,6 +168,8 @@ def update_task(task_id):
         else:
             task.title = data.get('title', task.title)
             task.column = data.get('column', task.column)
+            if 'order' in data:
+                task.order = data['order']
             if 'status' in data:
                 task.status = data['status']
                 if task.status == 'finished':
@@ -194,6 +194,18 @@ def update_task(task_id):
         db.session.delete(task)
         db.session.commit()
         return jsonify({'success': True})
+    
+@app.route('/api/tasks/order', methods=['PUT'])
+def update_tasks_order():
+    data = request.json  # Expecting a list of task orders
+    for task_data in data.get('tasks', []):
+        task = Task.query.get(task_data['id'])
+        if task:
+            task.order = task_data['order']
+            task.column = task_data.get('status', task.column)  # Update status if changed
+    db.session.commit()
+    return jsonify({'success': True})
+    
     
 @app.route('/api/tasks/archive', methods=["POST"])
 def archive_completed_tasks():

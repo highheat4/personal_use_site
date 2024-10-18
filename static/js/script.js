@@ -1,19 +1,5 @@
+// * Helper Functions and Global variables
 const columnOrder = ['to-do-week', 'to-do-today', 'in-progress', 'finished'];
-
-function createTaskElement(task) {
-  const taskElement = document.createElement('div');
-  taskElement.className = 'task-card';
-  taskElement.dataset.taskId = task.id;
-
-  taskElement.innerHTML = `
-    <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
-    <div class="task-buttons">
-      ${getButtonsForTask(task)}
-    </div>
-  `;
-  return taskElement;
-}
-
 function getLocalDateString() {
     const today = new Date();
     const year = today.getFullYear();
@@ -22,161 +8,47 @@ function getLocalDateString() {
     return `${year}-${month}-${day}`;
 }
 
-function initializeSortable() {
-    columnOrder.forEach(columnId => {
-      const columnElement = document.getElementById(columnId);
-  
-      Sortable.create(columnElement, {
-        group: 'columns', // Enable moving items between columns
-        animation: 150,
-        handle: '.task-card',
-        draggable: '.task-card',
-        onEnd: function (evt) {
-          // Update task order in the client-side state here
-          // Optionally, save to localStorage or send to the server when appropriate
-        },
-      });
-    });
-}
-  
-function loadTasks() {
-    axios.get('/api/tasks')
-      .then(response => {
-        const tasks = response.data;
-  
-        // Clear columns
-        columnOrder.forEach(status => {
-          const column = document.getElementById(status);
-          column.innerHTML = `
-            <div class="column-header">
-              <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-              <span>...</span>
-            </div>
-          `;
-        });
-  
-        tasks.forEach(task => {
-          const columnElement = document.getElementById(task.status);
-          if (!columnElement) return;
-  
-          const taskElement = createTaskElement(task);
-          columnElement.appendChild(taskElement);
-        });
-  
-        // Add "Add a card" buttons to columns
-        columnOrder.forEach(status => {
-          const column = document.getElementById(status);
-          const addCard = document.createElement('div');
-          addCard.className = 'add-card';
-          addCard.textContent = '+ Add a card';
-          addCard.onclick = () => addTask(status);
-          column.appendChild(addCard);
-        });
-  
-        // Initialize Sortable
-        initializeSortable();
-      })
-      .catch(error => {
-        console.error('Error loading tasks:', error);
-      });
-  }
-
-function getButtonsForTask(task) {
-    switch (task.status) {
-        case 'to-do-week':
-            return `<button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">→ Today</button>`;
-        case 'to-do-today':
-            return `
-                <button class="task-button" onclick="moveTask(${task.id}, 'in-progress')">▶ IP</button>
-                <button class="task-button" onclick="moveTask(${task.id}, 'finished')">✓</button>
-            `;
-        case 'in-progress':
-            return `
-                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-week')">↺ Week</button>
-                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">↺ Today</button>
-                <button class="task-button" onclick="moveTask(${task.id}, 'finished')">✓</button>
-            `;
-        case 'finished':
-            return `
-                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-week')">↺ Week</button>
-                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">↺ Today</button>
-            `;
-        default:
-            return '';
+// * Habit Functions
+// Helper function to revert visual state if needed
+function toggleVisualState(element) {
+    const isCompleted = element.classList.contains('habit-complete');
+    if (isCompleted) {
+        element.classList.remove('habit-complete');
+        element.classList.add('habit-incomplete');
+    } else {
+        element.classList.add('habit-complete');
+        element.classList.remove('habit-incomplete');
     }
 }
 
-function addTask(status) {
-    const column = document.getElementById(status);
-    
-    // Hide the "Add a card" button
-    const addCardButton = column.querySelector('.add-card');
-    addCardButton.style.display = 'none';
+function toggleHabit(element, habitId) {
+    // Toggle the visual state immediately
+    const isCurrentlyCompleted = element.classList.contains('habit-complete');
 
-    // Create a new task card div
-    const newCard = document.createElement('div');
-    newCard.classList.add('task-card');
-    newCard.contentEditable = 'true';  // Make the new card editable
+    if (isCurrentlyCompleted) {
+        // Remove 'habit-complete', add 'habit-incomplete'
+        element.classList.remove('habit-complete');
+        element.classList.add('habit-incomplete');
+    } else {
+        // Add 'habit-complete', remove 'habit-incomplete'
+        element.classList.add('habit-complete');
+        element.classList.remove('habit-incomplete');
+    }
 
-    // Add event listener to handle saving when 'Enter' is pressed
-    newCard.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();  // Prevent new lines when pressing Enter
-            const taskTitle = newCard.textContent.trim();
-            if (taskTitle) {
-                // Send task title and status to the backend
-                axios.post('/api/tasks', { title: taskTitle, status })
-                    .then(() => {
-                        loadTasks();  // Reload tasks after adding new one
-                        addCardButton.style.display = 'block';  // Show "Add a card" button again
-                    });
-            } else {
-                // Remove the card if no text was entered
-                newCard.remove();
-                addCardButton.style.display = 'block';  // Show "Add a card" button again
+    // Send the request to the backend without toggle_date
+    axios.put(`/api/habits/${habitId}`, {})
+        .then(response => {
+            if (!response.data.success) {
+                console.error(`Failed to toggle habit ${habitId}`);
+                // Optionally revert the visual change if the backend fails
+                toggleVisualState(element);
             }
-        }
-    });
-
-    // Add event listener for "Escape" key to discard the card
-    newCard.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            newCard.remove();  // Discard the new card
-            addCardButton.style.display = 'block';  // Show "Add a card" button again
-        }
-    });
-
-    // Append the new card to the column
-    column.appendChild(newCard);
-    // Focus on the new card to allow typing immediately
-    newCard.focus();
-}
-
-function moveTask(taskId, newStatus) {
-    let data = { status: newStatus };
-    axios.put(`/api/tasks/${taskId}`, data)
-        .then(() => loadTasks())
+        })
         .catch(error => {
-            console.error('Error moving task:', error);
+            console.error('Error toggling habit:', error.response ? error.response.data : error.message);
+            // Optionally revert the visual change if the backend fails
+            toggleVisualState(element);
         });
-}
-
-function updateTaskTitle(taskId, element) {
-    const newTitle = element.textContent.trim();
-    axios.put(`/api/tasks/${taskId}`, { title: newTitle })
-    .then((response) => {
-        if (response.data.deleted) {
-            // If the task was deleted (empty title), remove it from the UI
-            element.closest('.task-card').remove();
-        } else {
-            // If the task was updated, reload tasks to reflect any changes
-            loadTasks();
-        }
-    })
-    .catch((error) => {
-        console.error('Error updating task:', error);
-        loadTasks(); // Reload tasks to ensure UI is in sync with server
-    });
 }
 
 function loadHabits() {
@@ -226,46 +98,224 @@ function addHabit() {
     }
 }
 
-function toggleHabit(element, habitId) {
-    // Toggle the visual state immediately
-    const isCurrentlyCompleted = element.classList.contains('habit-complete');
 
-    if (isCurrentlyCompleted) {
-        // Remove 'habit-complete', add 'habit-incomplete'
-        element.classList.remove('habit-complete');
-        element.classList.add('habit-incomplete');
-    } else {
-        // Add 'habit-complete', remove 'habit-incomplete'
-        element.classList.add('habit-complete');
-        element.classList.remove('habit-incomplete');
+// * Task functions
+function getButtonsForTask(task) {
+    switch (task.status) {
+        case 'to-do-week':
+            return `<button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">→ Today</button>`;
+        case 'to-do-today':
+            return `
+                <button class="task-button" onclick="moveTask(${task.id}, 'in-progress')">▶ IP</button>
+                <button class="task-button" onclick="moveTask(${task.id}, 'finished')">✓</button>
+            `;
+        case 'in-progress':
+            return `
+                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-week')">↺ Week</button>
+                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">↺ Today</button>
+                <button class="task-button" onclick="moveTask(${task.id}, 'finished')">✓</button>
+            `;
+        case 'finished':
+            return `
+                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-week')">↺ Week</button>
+                <button class="task-button" onclick="moveTask(${task.id}, 'to-do-today')">↺ Today</button>
+            `;
+        default:
+            return '';
     }
+}
 
-    // Send the request to the backend without toggle_date
-    axios.put(`/api/habits/${habitId}`, {})
-        .then(response => {
-            if (!response.data.success) {
-                console.error(`Failed to toggle habit ${habitId}`);
-                // Optionally revert the visual change if the backend fails
-                toggleVisualState(element);
+function createTaskElement(task) {
+  const taskElement = document.createElement('div');
+  taskElement.className = 'task-card';
+  taskElement.dataset.taskId = task.id;
+
+  taskElement.innerHTML = `
+    <div class="task-title" contenteditable="true" onblur="updateTaskTitle(${task.id}, this)">${task.title}</div>
+    <div class="task-buttons">
+      ${getButtonsForTask(task)}
+    </div>
+  `;
+  return taskElement;
+}
+
+function saveTaskOrder() {
+    const tasksData = [];
+  
+    columnOrder.forEach(columnId => {
+      const columnElement = document.getElementById(columnId);
+      const taskCards = columnElement.querySelectorAll('.task-card');
+  
+      taskCards.forEach((taskCard, index) => {
+        const taskId = taskCard.dataset.taskId;
+        tasksData.push({
+          id: parseInt(taskId),
+          order: index, // The index represents the new order
+          status: columnId  // Update status in case the task was moved to a different column
+        });
+      });
+    });
+
+    // Send the updated order to the server
+    axios.put('/api/tasks/order', { tasks: tasksData })
+      .then(() => {
+        console.log('Task order saved.');
+      })
+      .catch(error => {
+        console.error('Error saving task order:', error);
+      });
+}
+
+function initializeSortable() {
+    columnOrder.forEach(columnId => {
+      const columnElement = document.getElementById(columnId);
+  
+      Sortable.create(columnElement, {
+        group: 'columns', // Enable moving items between columns
+        animation: 150,
+        handle: '.task-card',
+        draggable: '.task-card',
+        onEnd: function (evt) {
+            // Update the order on the server
+            saveTaskOrder();
+        },
+      });
+    });
+}
+
+function loadTasks() {
+    axios.get('/api/tasks')
+      .then(response => {
+        const tasks = response.data;
+  
+        // Clear columns
+        columnOrder.forEach(status => {
+          const column = document.getElementById(status);
+          column.innerHTML = `
+            <div class="column-header">
+              <span class="column-title">${column.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+              <span>...</span>
+            </div>
+          `;
+        });
+  
+        // Group tasks by status and sort them
+        const tasksByStatus = {};
+        columnOrder.forEach(status => {
+            tasksByStatus[status] = [];
+        });
+
+        tasks.forEach(task => {
+            if (tasksByStatus[task.status]) {
+              tasksByStatus[task.status].push(task);
             }
-        })
+        });
+
+        // Sort tasks within each column
+        columnOrder.forEach(status => {
+            tasksByStatus[status].sort((a, b) => a.order - b.order);
+        });
+
+        // Render tasks
+        columnOrder.forEach(status => {
+            const columnElement = document.getElementById(status);
+            tasksByStatus[status].forEach(task => {
+            const taskElement = createTaskElement(task);
+            columnElement.appendChild(taskElement);
+            });
+        });
+
+        // Add "Add a card" buttons to columns
+        columnOrder.forEach(status => {
+          const column = document.getElementById(status);
+          const addCard = document.createElement('div');
+          addCard.className = 'add-card';
+          addCard.textContent = '+ Add a card';
+          addCard.onclick = () => addTask(status);
+          column.appendChild(addCard);
+        });
+  
+        // Initialize Sortable
+        initializeSortable();
+    })
+    .catch(error => {
+    console.error('Error loading tasks:', error);
+    });
+}
+
+function addTask(status) {
+    const column = document.getElementById(status);
+    
+    // Hide the "Add a card" button
+    const addCardButton = column.querySelector('.add-card');
+    addCardButton.style.display = 'none';
+
+    // Create a new task card div
+    const newCard = document.createElement('div');
+    newCard.classList.add('task-card');
+    newCard.contentEditable = 'true';  // Make the new card editable
+
+    // Add event listener to handle saving when 'Enter' is pressed
+    newCard.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();  // Prevent new lines when pressing Enter
+            const taskTitle = newCard.textContent.trim();
+            if (taskTitle) {
+                const taskCards = column.querySelectorAll('.task-card');
+                const newOrder = taskCards.length;
+                // Send task title and status to the backend
+                axios.post('/api/tasks', { title: taskTitle, status, order: newOrder })
+                .then(() => {
+                    loadTasks();  // Reload tasks after adding new one
+                    addCardButton.style.display = 'block';  // Show "Add a card" button again
+                });
+            } else {
+                // Remove the card if no text was entered
+                newCard.remove();
+                addCardButton.style.display = 'block';  // Show "Add a card" button again
+            }
+        }
+    });
+
+    // Add event listener for "Escape" key to discard the card
+    newCard.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            newCard.remove();  // Discard the new card
+            addCardButton.style.display = 'block';  // Show "Add a card" button again
+        }
+    });
+
+    // Append the new card to the column
+    column.appendChild(newCard);
+    // Focus on the new card to allow typing immediately
+    newCard.focus();
+}
+
+function moveTask(taskId, newStatus) {
+    let data = { status: newStatus };
+    axios.put(`/api/tasks/${taskId}`, data)
+        .then(() => loadTasks())
         .catch(error => {
-            console.error('Error toggling habit:', error.response ? error.response.data : error.message);
-            // Optionally revert the visual change if the backend fails
-            toggleVisualState(element);
+            console.error('Error moving task:', error);
         });
 }
 
-// Helper function to revert visual state if needed
-function toggleVisualState(element) {
-    const isCompleted = element.classList.contains('habit-complete');
-    if (isCompleted) {
-        element.classList.remove('habit-complete');
-        element.classList.add('habit-incomplete');
-    } else {
-        element.classList.add('habit-complete');
-        element.classList.remove('habit-incomplete');
-    }
+function updateTaskTitle(taskId, element) {
+    const newTitle = element.textContent.trim();
+    axios.put(`/api/tasks/${taskId}`, { title: newTitle })
+    .then((response) => {
+        if (response.data.deleted) {
+            // If the task was deleted (empty title), remove it from the UI
+            element.closest('.task-card').remove();
+        } else {
+            // If the task was updated, reload tasks to reflect any changes
+            loadTasks();
+        }
+    })
+    .catch((error) => {
+        console.error('Error updating task:', error);
+        loadTasks(); // Reload tasks to ensure UI is in sync with server
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {

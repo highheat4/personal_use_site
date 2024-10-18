@@ -234,12 +234,15 @@ function getHabitShade(dayData) {
         '#2c2c2c', // No habits available (darkest)
         '#3b3b3b', // 0% completion
         '#1864ab', // 10% completion
-        '#1971c2', // 25% completion
-        '#1c7ed6', // 40% completion
-        '#228be6', // 65% completion
-        '#339af0', // 75% completion
-        '#4dabf7', // 85% completion
-        '#74c0fc'  // 100% completion
+        '#1971c2', // 20% completion
+        '#1c7ed6', // 30% completion
+        '#228be6', // 40% completion
+        '#339af0', // 50% completion
+        '#4dabf7', // 60% completion
+        '#74c0fc', // 70% completion
+        '#a5d8ff', // 80% completion
+        '#d0ebff', // 90% completion
+        '#e7f5ff' // 100% completion
     ];
 
     if (!dayData || dayData.completionRate === null) {
@@ -250,18 +253,24 @@ function getHabitShade(dayData) {
             return shades[1];
         } else if (completionRate <= 0.1) {
             return shades[2];
-        } else if (completionRate <= 0.25) {
+        } else if (completionRate <= 0.2) {
             return shades[3];
-        } else if (completionRate <= 0.40) {
+        } else if (completionRate <= 0.3) {
             return shades[4];
-        } else if (completionRate <= 0.65) {
+        } else if (completionRate <= 0.4) {
             return shades[5];
-        } else if (completionRate <= 0.75) {
+        } else if (completionRate <= 0.5) {
             return shades[6];
-        } else if (completionRate <= 0.85) {
+        } else if (completionRate <= 0.6) {
             return shades[7];
-        } else {
+        } else if (completionRate <= 0.7) {
             return shades[8];
+        } else if (completionRate <= 0.8) {
+            return shades[9];
+        } else if (completionRate <= 0.9) {
+            return shades[10];
+        } else {
+            return shades[11];
         }
     }
 }
